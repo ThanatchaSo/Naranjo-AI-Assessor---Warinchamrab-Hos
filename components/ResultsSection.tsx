@@ -1,9 +1,8 @@
 
-import React, { useState, useRef } from 'react';
+import React, { useRef } from 'react';
 import { interpretScore, getColorForScore, QUESTIONS_BY_LANG } from '../constants';
-import { ReportData, AIAnalysisResult, Interpretation, Translation } from '../types';
-import { analyzeADR } from '../services/geminiService';
-import { Sparkles, Loader2, AlertTriangle, FileText, ChevronRight, Printer, FileCheck } from 'lucide-react';
+import { ReportData, Translation } from '../types';
+import { Printer, FileCheck } from 'lucide-react';
 import { DrugAllergyCard } from './DrugAllergyCard';
 
 interface ResultsSectionProps {
@@ -15,9 +14,6 @@ interface ResultsSectionProps {
 }
 
 export const ResultsSection: React.FC<ResultsSectionProps> = ({ totalScore, drugName, reaction, reportData, t }) => {
-  const [analysis, setAnalysis] = useState<AIAnalysisResult | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [analyzed, setAnalyzed] = useState(false);
   
   // Ref to capture the card HTML
   const cardRef = useRef<HTMLDivElement>(null);
@@ -25,24 +21,6 @@ export const ResultsSection: React.FC<ResultsSectionProps> = ({ totalScore, drug
   const interpretationKey = interpretScore(totalScore).toLowerCase() as keyof typeof t.interpretations;
   const interpretationLabel = t.interpretations[interpretationKey] || interpretScore(totalScore);
   const colorClass = getColorForScore(totalScore);
-
-  const handleAnalyze = async () => {
-    setLoading(true);
-    try {
-      const baseInterpretation = interpretScore(totalScore) as Interpretation;
-      const currentReport = { 
-        ...reportData, 
-        interpretation: baseInterpretation 
-      };
-      const result = await analyzeADR(currentReport);
-      setAnalysis(result);
-      setAnalyzed(true);
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handlePrintCard = () => {
     if (!cardRef.current) return;
@@ -140,32 +118,6 @@ export const ResultsSection: React.FC<ResultsSectionProps> = ({ totalScore, drug
           `).join('')
         : `<tr><td colspan="3" class="py-3 text-center text-xs text-slate-400 italic">${t.noHistoryAdded}</td></tr>`;
 
-    // AI Analysis Section
-    const aiSection = analysis ? `
-        <div class="mb-6 break-inside-avoid">
-            <h2 class="text-sm font-bold text-slate-900 uppercase tracking-wider border-b border-slate-300 pb-2 mb-3">
-                AI Clinical Analysis
-            </h2>
-            <div class="bg-slate-50 p-4 rounded border border-slate-200 text-sm mb-4">
-                <p class="font-bold text-slate-700 mb-1">Summary:</p>
-                <p class="text-slate-600 mb-3 leading-relaxed">${analysis.analysis}</p>
-                
-                <p class="font-bold text-slate-700 mb-1">Risk Level:</p>
-                <span class="inline-block px-2 py-0.5 rounded text-xs font-bold mb-3 ${
-                    analysis.riskFactor === 'High' ? 'bg-red-100 text-red-700' :
-                    analysis.riskFactor === 'Medium' ? 'bg-orange-100 text-orange-700' :
-                    'bg-green-100 text-green-700'
-                }">${analysis.riskFactor}</span>
-
-                <p class="font-bold text-slate-700 mb-1">Recommendations:</p>
-                <ul class="list-disc pl-5 space-y-1 text-slate-600">
-                    ${analysis.recommendations.map(rec => `<li>${rec}</li>`).join('')}
-                </ul>
-            </div>
-            <p class="text-[10px] text-slate-400 italic">${t.disclaimer}</p>
-        </div>
-    ` : '';
-
     printWindow.document.write(`
         <!DOCTYPE html>
         <html>
@@ -189,7 +141,7 @@ export const ResultsSection: React.FC<ResultsSectionProps> = ({ totalScore, drug
                     <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQYvahIeXlj40inpCDGCZxz6ytgMnT7fcHWOYlB3Y0EFDX3EBRI8s5EAXrhpD7CFajRPbU&usqp=CAU" 
                          class="h-16 w-16 rounded-full object-cover" />
                     <div>
-                        <h1 class="text-xl font-bold text-slate-900">Naranjo AI Assessor</h1>
+                        <h1 class="text-xl font-bold text-slate-900">Naranjo Assessor</h1>
                         <p class="text-sm text-slate-600">Warinchamrab Hospital</p>
                     </div>
                 </div>
@@ -270,9 +222,6 @@ export const ResultsSection: React.FC<ResultsSectionProps> = ({ totalScore, drug
                     </tbody>
                 </table>
             </div>
-
-            <!-- AI Section -->
-            ${aiSection}
 
             <!-- Signatures -->
             <div class="mt-12 grid grid-cols-2 gap-12 break-inside-avoid">
@@ -355,88 +304,6 @@ export const ResultsSection: React.FC<ResultsSectionProps> = ({ totalScore, drug
                 {t.printReportBtn}
             </button>
           </div>
-        </div>
-
-        {/* AI Action Area */}
-        <div className="p-6 bg-gradient-to-b from-white to-slate-50">
-          {!analyzed ? (
-            <button
-              onClick={handleAnalyze}
-              disabled={loading || !drugName || !reaction}
-              className={`w-full py-4 rounded-xl flex items-center justify-center gap-3 transition-all duration-300 group ${
-                  !drugName || !reaction 
-                  ? 'bg-slate-200 text-slate-400 cursor-not-allowed' 
-                  : 'bg-gradient-to-r from-teal-600 to-teal-500 hover:from-teal-500 hover:to-teal-400 text-white shadow-lg hover:shadow-teal-200/50'
-              }`}
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="h-5 w-5 animate-spin" />
-                  <span>{t.analyzing}</span>
-                </>
-              ) : (
-                <>
-                  <Sparkles className="h-5 w-5 group-hover:scale-110 transition-transform" />
-                  <span>{t.analyzeBtn}</span>
-                </>
-              )}
-            </button>
-          ) : (
-            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-              {/* Analysis Header */}
-              <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
-                      <Sparkles className="h-5 w-5 text-teal-500" />
-                      AI Clinical Insight
-                  </h3>
-                  <span className={`px-3 py-1 rounded-full text-xs font-bold ${
-                      analysis?.riskFactor === 'High' ? 'bg-red-100 text-red-700' :
-                      analysis?.riskFactor === 'Medium' ? 'bg-orange-100 text-orange-700' :
-                      'bg-green-100 text-green-700'
-                  }`}>
-                      {t.riskLevel}: {analysis?.riskFactor ? t.riskFactors[analysis.riskFactor] : analysis?.riskFactor}
-                  </span>
-              </div>
-
-              {/* Summary */}
-              <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
-                  <p className="text-slate-700 leading-relaxed text-sm sm:text-base">
-                      {analysis?.analysis}
-                  </p>
-              </div>
-
-              {/* Recommendations */}
-              <div>
-                  <h4 className="text-sm font-bold text-slate-900 uppercase tracking-wide mb-3 flex items-center gap-2">
-                      <FileText className="h-4 w-4 text-slate-400" />
-                      {t.recommendations}
-                  </h4>
-                  <ul className="space-y-3">
-                      {analysis?.recommendations.map((rec, idx) => (
-                          <li key={idx} className="flex items-start gap-3 bg-white p-3 rounded-lg border border-slate-100">
-                              <ChevronRight className="h-5 w-5 text-teal-500 shrink-0 mt-0.5" />
-                              <span className="text-slate-700 text-sm">{rec}</span>
-                          </li>
-                      ))}
-                  </ul>
-              </div>
-
-              {/* Disclaimer */}
-              <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 flex gap-3 items-start">
-                  <AlertTriangle className="h-5 w-5 text-amber-500 shrink-0 mt-0.5" />
-                  <p className="text-xs text-amber-800 leading-relaxed">
-                      {t.disclaimer}
-                  </p>
-              </div>
-
-              <button 
-                  onClick={() => setAnalyzed(false)}
-                  className="w-full py-2 text-slate-400 hover:text-teal-600 text-sm font-medium transition-colors"
-              >
-                  {t.resetAnalysis}
-              </button>
-            </div>
-          )}
         </div>
       </div>
     </div>
