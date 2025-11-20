@@ -6,7 +6,7 @@ import {
   Building2,
   CalendarDays,
   UserCog,
-  IdCard,
+  CreditCard, // Replaced IdCard
   Plus,
   Trash2,
   History,
@@ -19,6 +19,51 @@ interface PatientFormProps {
   data: PatientDetails;
   onChange: (data: PatientDetails) => void;
 }
+
+// Define ModernInput outside to prevent focus loss on re-render
+const ModernInput = ({
+  label,
+  value,
+  onChange,
+  icon: Icon,
+  type = "text",
+  placeholder,
+  colorClass = "blue"
+}: {
+  label: string;
+  value: string;
+  onChange: (val: string) => void;
+  icon: any;
+  type?: string;
+  placeholder?: string;
+  colorClass?: "blue" | "amber";
+}) => {
+  // Dynamic styling based on color theme
+  const focusRing = colorClass === "amber" ? "focus:ring-amber-500/10" : "focus:ring-blue-500/10";
+  const focusBorder = colorClass === "amber" ? "focus:border-amber-500" : "focus:border-blue-500";
+  const focusText = colorClass === "amber" ? "group-focus-within:text-amber-600" : "group-focus-within:text-blue-600";
+  const iconColor = colorClass === "amber" ? "group-focus-within:text-amber-500" : "group-focus-within:text-blue-500";
+
+  return (
+    <div className="space-y-1.5 group">
+      <label className={`block text-xs font-bold uppercase tracking-wide text-slate-500 ml-1 transition-colors ${focusText}`}>
+        {label}
+      </label>
+      <div className="relative transition-all duration-200 transform group-focus-within:-translate-y-0.5">
+        <div className={`absolute left-3 top-3.5 text-slate-400 transition-colors ${iconColor}`}>
+          <Icon className="h-5 w-5" />
+        </div>
+        <input
+          type={type}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className={`w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-xl focus:bg-white ${focusBorder} focus:ring-4 ${focusRing} outline-none transition-all duration-200 font-medium text-slate-700 placeholder:text-slate-300 shadow-sm`}
+          placeholder={placeholder}
+        />
+      </div>
+    </div>
+  );
+};
 
 export const PatientForm: React.FC<PatientFormProps> = ({ t, data, onChange }) => {
   const [newDrug, setNewDrug] = useState('');
@@ -54,51 +99,6 @@ export const PatientForm: React.FC<PatientFormProps> = ({ t, data, onChange }) =
     });
   };
 
-  // Reusable modern input component
-  const ModernInput = ({
-    label,
-    value,
-    field,
-    icon: Icon,
-    type = "text",
-    placeholder,
-    colorClass = "blue"
-  }: {
-    label: string;
-    value: string;
-    field?: keyof PatientDetails;
-    icon: any;
-    type?: string;
-    placeholder?: string;
-    colorClass?: "blue" | "amber";
-  }) => {
-    // Dynamic styling based on color theme
-    const focusRing = colorClass === "amber" ? "focus:ring-amber-500/10" : "focus:ring-blue-500/10";
-    const focusBorder = colorClass === "amber" ? "focus:border-amber-500" : "focus:border-blue-500";
-    const focusText = colorClass === "amber" ? "group-focus-within:text-amber-600" : "group-focus-within:text-blue-600";
-    const iconColor = colorClass === "amber" ? "group-focus-within:text-amber-500" : "group-focus-within:text-blue-500";
-
-    return (
-      <div className="space-y-1.5 group">
-        <label className={`block text-xs font-bold uppercase tracking-wide text-slate-500 ml-1 transition-colors ${focusText}`}>
-          {label}
-        </label>
-        <div className="relative transition-all duration-200 transform group-focus-within:-translate-y-0.5">
-          <div className={`absolute left-3 top-3.5 text-slate-400 transition-colors ${iconColor}`}>
-            <Icon className="h-5 w-5" />
-          </div>
-          <input
-            type={type}
-            value={value}
-            onChange={(e) => field ? handleInputChange(field, e.target.value) : undefined}
-            className={`w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-xl focus:bg-white ${focusBorder} focus:ring-4 ${focusRing} outline-none transition-all duration-200 font-medium text-slate-700 placeholder:text-slate-300 shadow-sm`}
-            placeholder={placeholder}
-          />
-        </div>
-      </div>
-    );
-  };
-
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
       
@@ -119,28 +119,28 @@ export const PatientForm: React.FC<PatientFormProps> = ({ t, data, onChange }) =
              <ModernInput 
                 label={t.labelName} 
                 value={data.fullName} 
-                field="fullName" 
+                onChange={(val) => handleInputChange('fullName', val)}
                 icon={User} 
                 placeholder="..."
              />
              <ModernInput 
                 label={t.labelHN} 
                 value={data.hn} 
-                field="hn" 
+                onChange={(val) => handleInputChange('hn', val)}
                 icon={FileDigit} 
                 placeholder="..."
              />
              <ModernInput 
                 label={t.labelUnit} 
                 value={data.unit} 
-                field="unit" 
+                onChange={(val) => handleInputChange('unit', val)}
                 icon={Building2} 
                 placeholder="..."
              />
              <ModernInput 
                 label={t.labelDate} 
                 value={data.date} 
-                field="date" 
+                onChange={(val) => handleInputChange('date', val)}
                 icon={CalendarDays} 
                 type="date"
              />
@@ -163,15 +163,15 @@ export const PatientForm: React.FC<PatientFormProps> = ({ t, data, onChange }) =
              <ModernInput 
                 label={t.labelPharmacist} 
                 value={data.pharmacistName} 
-                field="pharmacistName" 
+                onChange={(val) => handleInputChange('pharmacistName', val)}
                 icon={UserCog} 
                 placeholder="..."
              />
              <ModernInput 
                 label={t.labelLicense} 
                 value={data.licenseNo} 
-                field="licenseNo" 
-                icon={IdCard} 
+                onChange={(val) => handleInputChange('licenseNo', val)}
+                icon={CreditCard} // Using CreditCard icon
                 placeholder="ภ.xxxxx"
              />
           </div>

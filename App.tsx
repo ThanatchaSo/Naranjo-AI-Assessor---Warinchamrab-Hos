@@ -1,10 +1,12 @@
-import React, { useState, useMemo, useRef } from 'react';
+
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { Header } from './components/Header';
 import { QuestionItem } from './components/QuestionItem';
 import { ResultsSection } from './components/ResultsSection';
 import { PatientForm } from './components/PatientForm';
+import { SettingsModal } from './components/SettingsModal';
 import { QUESTIONS_BY_LANG, interpretScore, TRANSLATIONS } from './constants';
-import { AnswerValue, AssessmentState, Interpretation, Language, PatientDetails } from './types';
+import { AnswerValue, AssessmentState, Interpretation, Language, PatientDetails, AIConfig } from './types';
 import { AlertCircle, RefreshCw } from 'lucide-react';
 
 const App: React.FC = () => {
@@ -12,6 +14,32 @@ const App: React.FC = () => {
   const [answers, setAnswers] = useState<AssessmentState>({});
   const [drugName, setDrugName] = useState("");
   const [reaction, setReaction] = useState("");
+  
+  // Settings State
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [aiConfig, setAiConfig] = useState<AIConfig>({
+    provider: 'ollama',
+    modelName: 'medgemma',
+    ollamaUrl: 'http://localhost:11434',
+    apiKey: ''
+  });
+
+  // Load settings from localStorage on mount
+  useEffect(() => {
+    const savedConfig = localStorage.getItem('naranjo_ai_config');
+    if (savedConfig) {
+      try {
+        setAiConfig(JSON.parse(savedConfig));
+      } catch (e) {
+        console.error("Failed to parse saved config");
+      }
+    }
+  }, []);
+
+  const handleSaveSettings = (newConfig: AIConfig) => {
+    setAiConfig(newConfig);
+    localStorage.setItem('naranjo_ai_config', JSON.stringify(newConfig));
+  };
   
   // Initialize patient details with default date
   const [patientDetails, setPatientDetails] = useState<PatientDetails>({
@@ -88,11 +116,23 @@ const App: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-slate-50 pb-20 font-sans">
-      <Header lang={language} setLang={setLanguage} t={t} />
+      <Header 
+        lang={language} 
+        setLang={setLanguage} 
+        t={t} 
+        onOpenSettings={() => setIsSettingsOpen(true)}
+      />
+
+      <SettingsModal 
+        isOpen={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
+        config={aiConfig}
+        onSave={handleSaveSettings}
+      />
 
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
         
-        {/* 1. Patient Info & History Section (New) */}
+        {/* 1. Patient Info & History Section */}
         <PatientForm 
             t={t} 
             data={patientDetails} 
@@ -179,6 +219,7 @@ const App: React.FC = () => {
                     reaction={reaction}
                     reportData={reportData}
                     t={t}
+                    aiConfig={aiConfig} // Pass config
                 />
             )}
         </div>
@@ -203,7 +244,7 @@ const App: React.FC = () => {
             </p>
             <div className="text-slate-500 text-[10px] sm:text-xs mt-4 leading-relaxed">
               <p className="font-semibold text-slate-600 mb-1">
-                [Version 20250221]
+                [Version 20250221 - Stable Release]
               </p>
               <p>
                 พัฒนาโดยเภสัชกรธนัฎชา สองเมือง หัวหน้างานเภสัชกรรมสารสนเทศ และงานเภสัชกรรมการผลิต

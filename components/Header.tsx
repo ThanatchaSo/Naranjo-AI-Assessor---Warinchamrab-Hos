@@ -1,15 +1,16 @@
 
 import React from 'react';
-import { Pill, BookOpen } from 'lucide-react';
+import { Pill, BookOpen, Settings } from 'lucide-react';
 import { Language, Translation } from '../types';
 
 interface HeaderProps {
   lang: Language;
   setLang: (lang: Language) => void;
   t: Translation;
+  onOpenSettings: () => void;
 }
 
-export const Header: React.FC<HeaderProps> = ({ lang, setLang, t }) => {
+export const Header: React.FC<HeaderProps> = ({ lang, setLang, t, onOpenSettings }) => {
   const languages: { code: Language; label: string; flag: string }[] = [
     { code: 'th', label: 'ไทย', flag: '🇹🇭' },
     { code: 'en', label: 'ENG', flag: '🇬🇧' },
@@ -37,6 +38,14 @@ export const Header: React.FC<HeaderProps> = ({ lang, setLang, t }) => {
             <Pill className="h-4 w-4" />
             <span>{t.role}</span>
           </div>
+
+          <button
+            onClick={onOpenSettings}
+            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-all"
+            title="Admin Settings"
+          >
+            <Settings className="h-5 w-5" />
+          </button>
 
           <a
             href="https://heyzine.com/flip-book/3b0913bf57.html#page/82"

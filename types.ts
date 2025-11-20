@@ -1,4 +1,5 @@
 
+
 export enum Interpretation {
   DEFINITE = "Definite",
   PROBABLE = "Probable",
@@ -90,13 +91,13 @@ export interface Translation {
   classification: string;
   analyzeBtn: string;
   analyzing: string;
+  aiError: string;
   drug: string;
   event: string;
   riskLevel: string;
   recommendations: string;
   disclaimer: string;
   reset: string;
-  resetAnalysis: string;
   yes: string;
   no: string;
   dontKnow: string;
@@ -110,6 +111,7 @@ export interface Translation {
     Low: string;
     Medium: string;
     High: string;
+    Unknown: string;
   };
   // Card
   cardTitle: string;
@@ -124,4 +126,11 @@ export interface Translation {
   printReportBtn: string;
   assessor: string;
   guidelineBtn: string;
+}
+
+export interface AIConfig {
+  provider: 'gemini' | 'ollama';
+  apiKey?: string; // For Gemini
+  modelName: string; // 'medgemma', 'llama3', or 'gemini-2.5-flash'
+  ollamaUrl?: string; // e.g., 'http://localhost:11434'
 }

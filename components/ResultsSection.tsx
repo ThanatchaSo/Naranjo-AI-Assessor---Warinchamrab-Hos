@@ -1,9 +1,10 @@
 
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import { interpretScore, getColorForScore, QUESTIONS_BY_LANG } from '../constants';
-import { ReportData, Translation } from '../types';
-import { Printer, FileCheck } from 'lucide-react';
+import { ReportData, Translation, AIAnalysisResult, AIConfig } from '../types';
+import { Printer, FileCheck, BrainCircuit, Sparkles, AlertTriangle, Stethoscope, AlertCircle } from 'lucide-react';
 import { DrugAllergyCard } from './DrugAllergyCard';
+import { analyzeADR } from '../services/geminiService';
 
 interface ResultsSectionProps {
   totalScore: number;
@@ -11,16 +12,34 @@ interface ResultsSectionProps {
   reaction: string;
   reportData: ReportData;
   t: Translation;
+  aiConfig: AIConfig;
 }
 
-export const ResultsSection: React.FC<ResultsSectionProps> = ({ totalScore, drugName, reaction, reportData, t }) => {
+export const ResultsSection: React.FC<ResultsSectionProps> = ({ totalScore, drugName, reaction, reportData, t, aiConfig }) => {
   
-  // Ref to capture the card HTML
   const cardRef = useRef<HTMLDivElement>(null);
+  const [aiResult, setAiResult] = useState<AIAnalysisResult | null>(null);
+  const [isLoadingAI, setIsLoadingAI] = useState(false);
+  const [aiError, setAiError] = useState<string | null>(null);
 
   const interpretationKey = interpretScore(totalScore).toLowerCase() as keyof typeof t.interpretations;
   const interpretationLabel = t.interpretations[interpretationKey] || interpretScore(totalScore);
   const colorClass = getColorForScore(totalScore);
+
+  const handleAnalyzeAI = async () => {
+    setIsLoadingAI(true);
+    setAiError(null);
+    try {
+        // Pass the config to the service
+        const result = await analyzeADR(reportData, aiConfig);
+        setAiResult(result);
+    } catch (error: any) {
+        console.error(error);
+        setAiError(error.message || "AI Analysis Failed");
+    } finally {
+        setIsLoadingAI(false);
+    }
+  };
 
   const handlePrintCard = () => {
     if (!cardRef.current) return;
@@ -46,14 +65,12 @@ export const ResultsSection: React.FC<ResultsSectionProps> = ({ totalScore, drug
                 min-height: 100vh;
                 margin: 0;
               }
-              /* Override the hidden class logic to make it visible in the popup */
               .printable-card-container {
                 display: flex !important;
                 visibility: visible !important;
                 box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);
                 margin: auto;
               }
-              /* Print specific overrides */
               @media print {
                 body {
                   background-color: white;
@@ -77,7 +94,6 @@ export const ResultsSection: React.FC<ResultsSectionProps> = ({ totalScore, drug
           <body>
             ${cardContent}
             <script>
-              // Small delay to ensure Tailwind loads before printing
               setTimeout(() => {
                 window.print();
               }, 1000);
@@ -95,7 +111,6 @@ export const ResultsSection: React.FC<ResultsSectionProps> = ({ totalScore, drug
 
     const questions = QUESTIONS_BY_LANG[reportData.language];
     
-    // Generate Questions Table Rows
     const questionsHtml = reportData.answers.map((ans, idx) => {
         const qText = questions[idx].text;
         return `
@@ -107,7 +122,6 @@ export const ResultsSection: React.FC<ResultsSectionProps> = ({ totalScore, drug
         `;
     }).join('');
 
-    // Generate History Rows
     const historyHtml = reportData.patientDetails?.history && reportData.patientDetails.history.length > 0 
         ? reportData.patientDetails.history.map(h => `
             <tr class="border-b border-slate-100 text-xs">
@@ -117,6 +131,22 @@ export const ResultsSection: React.FC<ResultsSectionProps> = ({ totalScore, drug
             </tr>
           `).join('')
         : `<tr><td colspan="3" class="py-3 text-center text-xs text-slate-400 italic">${t.noHistoryAdded}</td></tr>`;
+
+    const aiSectionHtml = aiResult ? `
+        <div class="mb-6 bg-teal-50 border border-teal-100 rounded-lg p-4 break-inside-avoid">
+            <h3 class="font-bold text-teal-800 border-b border-teal-200 pb-1 mb-2">AI Clinical Analysis</h3>
+            <p class="text-sm text-slate-700 mb-3">${aiResult.analysis}</p>
+            <div class="mb-2">
+                <span class="font-bold text-xs uppercase text-teal-700">Risk Level:</span> 
+                <span class="text-sm font-bold text-slate-900">${aiResult.riskFactor}</span>
+            </div>
+            <div class="text-sm text-slate-700 font-bold mb-1">Recommendations:</div>
+            <ul class="list-disc list-inside text-sm text-slate-600 space-y-1">
+               ${aiResult.recommendations.map(r => `<li>${r}</li>`).join('')}
+            </ul>
+            <p class="text-[10px] text-slate-400 mt-3 italic">Powered by ${aiConfig.provider === 'ollama' ? 'Local AI ('+aiConfig.modelName+')' : 'Google Gemini'}</p>
+        </div>
+    ` : '';
 
     printWindow.document.write(`
         <!DOCTYPE html>
@@ -135,7 +165,6 @@ export const ResultsSection: React.FC<ResultsSectionProps> = ({ totalScore, drug
         </head>
         <body class="p-8 max-w-[210mm] mx-auto">
             
-            <!-- Header -->
             <div class="flex items-center justify-between border-b-2 border-slate-800 pb-4 mb-6">
                 <div class="flex items-center gap-4">
                     <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQYvahIeXlj40inpCDGCZxz6ytgMnT7fcHWOYlB3Y0EFDX3EBRI8s5EAXrhpD7CFajRPbU&usqp=CAU" 
@@ -151,7 +180,6 @@ export const ResultsSection: React.FC<ResultsSectionProps> = ({ totalScore, drug
                 </div>
             </div>
 
-            <!-- Patient Details -->
             <div class="grid grid-cols-2 gap-6 mb-6 text-sm">
                 <div>
                     <h3 class="font-bold text-slate-700 border-b border-slate-200 pb-1 mb-2">Patient Information</h3>
@@ -171,7 +199,6 @@ export const ResultsSection: React.FC<ResultsSectionProps> = ({ totalScore, drug
                 </div>
             </div>
 
-            <!-- Drug Allergy History -->
             <div class="mb-6">
                 <h3 class="font-bold text-slate-700 border-b border-slate-200 pb-1 mb-2">History of Drug Allergy</h3>
                 <table class="w-full text-left">
@@ -188,7 +215,6 @@ export const ResultsSection: React.FC<ResultsSectionProps> = ({ totalScore, drug
                 </table>
             </div>
 
-            <!-- Assessment Result -->
             <div class="bg-slate-50 border border-slate-200 rounded-lg p-4 mb-6 flex items-center justify-between">
                 <div>
                     <p class="text-xs text-slate-500 uppercase tracking-wider font-semibold">Suspected Drug</p>
@@ -205,8 +231,9 @@ export const ResultsSection: React.FC<ResultsSectionProps> = ({ totalScore, drug
                     </div>
                 </div>
             </div>
+            
+            ${aiSectionHtml}
 
-            <!-- Questionnaire Details -->
             <div class="mb-8">
                 <h3 class="font-bold text-slate-700 border-b border-slate-200 pb-1 mb-3">Assessment Details</h3>
                 <table class="w-full">
@@ -223,7 +250,6 @@ export const ResultsSection: React.FC<ResultsSectionProps> = ({ totalScore, drug
                 </table>
             </div>
 
-            <!-- Signatures -->
             <div class="mt-12 grid grid-cols-2 gap-12 break-inside-avoid">
                 <div class="text-center">
                     <div class="border-b border-slate-300 h-12 mb-2"></div>
@@ -250,7 +276,6 @@ export const ResultsSection: React.FC<ResultsSectionProps> = ({ totalScore, drug
 
   return (
     <div className="space-y-6">
-      {/* Hidden Printable Card Wrapper */}
       <div className="hidden" ref={cardRef}>
         <DrugAllergyCard patientDetails={reportData.patientDetails!} reportData={reportData} t={t} />
       </div>
@@ -273,6 +298,74 @@ export const ResultsSection: React.FC<ResultsSectionProps> = ({ totalScore, drug
             </div>
 
           </div>
+        </div>
+        
+        {/* AI Section */}
+        <div className="bg-indigo-50 px-6 py-5 border-b border-indigo-100">
+          {!aiResult ? (
+              <div className="flex justify-center">
+                  <button 
+                    onClick={handleAnalyzeAI} 
+                    disabled={isLoadingAI}
+                    className="flex items-center gap-2 px-6 py-2 bg-indigo-600 text-white rounded-full font-bold text-sm hover:bg-indigo-700 transition-all shadow-md hover:shadow-indigo-200 disabled:opacity-70"
+                  >
+                      {isLoadingAI ? (
+                          <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div> {t.analyzing}</>
+                      ) : (
+                          <><BrainCircuit className="h-4 w-4" /> {t.analyzeBtn}</>
+                      )}
+                  </button>
+              </div>
+          ) : (
+              <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-500">
+                  <div className="flex items-start gap-3">
+                      <div className="bg-indigo-100 p-2 rounded-lg"><Stethoscope className="h-5 w-5 text-indigo-600" /></div>
+                      <div className="flex-1">
+                          <h4 className="font-bold text-indigo-900 text-sm uppercase tracking-wide mb-1">AI Clinical Analysis</h4>
+                          <p className="text-slate-700 text-sm leading-relaxed">{aiResult.analysis}</p>
+                      </div>
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row gap-4">
+                        <div className={`flex-1 p-3 rounded-lg border ${
+                            aiResult.riskFactor === 'High' ? 'bg-red-50 border-red-200' : 
+                            aiResult.riskFactor === 'Medium' ? 'bg-orange-50 border-orange-200' : 
+                            'bg-green-50 border-green-200'
+                        }`}>
+                            <div className="flex items-center gap-2 mb-1">
+                                <AlertTriangle className={`h-4 w-4 ${
+                                    aiResult.riskFactor === 'High' ? 'text-red-600' : 
+                                    aiResult.riskFactor === 'Medium' ? 'text-orange-600' : 
+                                    'text-green-600'
+                                }`} />
+                                <span className="text-xs font-bold uppercase text-slate-500">{t.riskLevel}</span>
+                            </div>
+                            <p className="font-bold text-slate-800 pl-6">{t.riskFactors[aiResult.riskFactor] || aiResult.riskFactor}</p>
+                        </div>
+
+                        <div className="flex-[2] bg-white p-3 rounded-lg border border-indigo-100">
+                            <div className="flex items-center gap-2 mb-2">
+                                <Sparkles className="h-4 w-4 text-indigo-500" />
+                                <span className="text-xs font-bold uppercase text-slate-500">{t.recommendations}</span>
+                            </div>
+                            <ul className="list-disc list-inside text-sm text-slate-600 space-y-1 pl-1">
+                                {aiResult.recommendations.map((rec, i) => <li key={i}>{rec}</li>)}
+                            </ul>
+                        </div>
+                  </div>
+                  
+                  <p className="text-[10px] text-slate-400 text-center italic">
+                    {t.disclaimer} 
+                    <span className="ml-2 text-indigo-400 opacity-50">({aiConfig.provider === 'ollama' ? aiConfig.modelName : 'Gemini'})</span>
+                  </p>
+              </div>
+          )}
+          
+          {aiError && (
+              <div className="mt-4 bg-red-50 text-red-600 p-3 rounded-lg text-sm flex items-center justify-center gap-2">
+                  <AlertCircle className="h-4 w-4" /> {aiError}
+              </div>
+          )}
         </div>
 
         {/* Context Summary */}
