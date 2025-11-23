@@ -1,6 +1,5 @@
-
 import React, { useState, useEffect } from 'react';
-import { X, Settings, Lock, Server, Cloud, Save, LogIn, AlertTriangle } from 'lucide-react';
+import { X, Settings, Lock, Server, Cloud, Save, LogIn, AlertTriangle, RefreshCw } from 'lucide-react';
 import { AIConfig } from '../types';
 
 interface SettingsModalProps {
@@ -22,23 +21,64 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, c
   const [modelName, setModelName] = useState(config.modelName);
   const [ollamaUrl, setOllamaUrl] = useState(config.ollamaUrl || 'http://localhost:11434');
 
+  // Ollama Models State
+  const [availableModels, setAvailableModels] = useState<string[]>([]);
+  const [isLoadingModels, setIsLoadingModels] = useState(false);
+  const [modelError, setModelError] = useState('');
+
   useEffect(() => {
     if (isOpen) {
-      // Reset auth on open if you want them to login every time, 
-      // or keep it false to require login. 
-      // Here we reset to ensure security.
       setIsAuthenticated(false);
       setUsername('');
       setPassword('');
       setError('');
       
-      // Load current config into state
       setProvider(config.provider);
       setApiKey(config.apiKey || '');
       setModelName(config.modelName);
       setOllamaUrl(config.ollamaUrl || 'http://localhost:11434');
+      setAvailableModels([]);
+      setModelError('');
     }
   }, [isOpen, config]);
+
+  const fetchOllamaModels = async () => {
+    if (!ollamaUrl) return;
+    setIsLoadingModels(true);
+    setModelError('');
+    try {
+      const cleanUrl = ollamaUrl.replace(/\/$/, '');
+      const response = await fetch(`${cleanUrl}/api/tags`);
+      if (!response.ok) throw new Error('Failed to connect');
+      const data = await response.json();
+      
+      if (data.models && Array.isArray(data.models)) {
+        const models = data.models.map((m: any) => m.name);
+        setAvailableModels(models);
+        
+        // If current model is not in list, keep it selected but user can switch
+        // If no model selected and we have models, select first
+        if (!modelName && models.length > 0) {
+          setModelName(models[0]);
+        }
+      } else {
+        setAvailableModels([]);
+      }
+    } catch (err) {
+      console.error(err);
+      setModelError('Connection failed. Is Ollama running?');
+      setAvailableModels([]); // Reset on error
+    } finally {
+      setIsLoadingModels(false);
+    }
+  };
+
+  // Auto-fetch when provider is ollama and authenticated
+  useEffect(() => {
+    if (isOpen && isAuthenticated && provider === 'ollama') {
+      fetchOllamaModels();
+    }
+  }, [isOpen, isAuthenticated, provider]);
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -127,7 +167,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, c
                 <label className="block text-sm font-bold text-slate-700">AI Model Provider</label>
                 <div className="grid grid-cols-2 gap-4">
                   <button
-                    onClick={() => { setProvider('ollama'); setModelName('medgemma'); }}
+                    onClick={() => { setProvider('ollama'); }}
                     className={`p-4 rounded-xl border-2 flex flex-col items-center gap-2 transition-all ${
                       provider === 'ollama' 
                         ? 'border-teal-500 bg-teal-50 text-teal-700' 
@@ -156,14 +196,45 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, c
                   <>
                      <div>
                       <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Local Model Name</label>
-                      <input 
-                        type="text" 
-                        value={modelName}
-                        onChange={(e) => setModelName(e.target.value)}
-                        className="w-full p-2 border border-slate-200 rounded bg-white focus:ring-2 focus:ring-teal-500 outline-none"
-                        placeholder="e.g. medgemma"
-                      />
-                      <p className="text-[10px] text-slate-400 mt-1">Default: medgemma (Requires ollama pull)</p>
+                      <div className="flex gap-2">
+                        <select 
+                          value={modelName}
+                          onChange={(e) => setModelName(e.target.value)}
+                          className="w-full p-2 border border-slate-200 rounded bg-white focus:ring-2 focus:ring-teal-500 outline-none"
+                          disabled={isLoadingModels}
+                        >
+                          <option value="" disabled>Select a model...</option>
+                          {/* Option for current model if not in list */}
+                          {modelName && !availableModels.includes(modelName) && (
+                             <option value={modelName}>{modelName} (Current)</option>
+                          )}
+                          {availableModels.map(model => (
+                            <option key={model} value={model}>{model}</option>
+                          ))}
+                          {availableModels.length === 0 && !isLoadingModels && (
+                             <option value="" disabled>No models found</option>
+                          )}
+                        </select>
+
+                        <button 
+                          onClick={fetchOllamaModels}
+                          className="p-2 bg-slate-100 hover:bg-slate-200 rounded border border-slate-200 text-slate-600 transition-colors"
+                          title="Refresh Models"
+                        >
+                          <RefreshCw className={`h-5 w-5 ${isLoadingModels ? 'animate-spin' : ''}`} />
+                        </button>
+                      </div>
+                      
+                      {modelError ? (
+                         <div className="flex items-center gap-1 mt-1 text-red-500">
+                           <AlertTriangle className="h-3 w-3" />
+                           <p className="text-[10px]">{modelError}</p>
+                         </div>
+                      ) : (
+                         <p className="text-[10px] text-slate-400 mt-1">
+                           {availableModels.length > 0 ? `${availableModels.length} models found.` : "Click refresh to load models."}
+                         </p>
+                      )}
                     </div>
                     <div>
                       <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Ollama URL</label>

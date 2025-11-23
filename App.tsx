@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { Header } from './components/Header';
 import { QuestionItem } from './components/QuestionItem';
@@ -244,7 +243,7 @@ const App: React.FC = () => {
             </p>
             <div className="text-slate-500 text-[10px] sm:text-xs mt-4 leading-relaxed">
               <p className="font-semibold text-slate-600 mb-1">
-                [Version 20250221 - Stable Release]
+                [Version 20250225 - Stable Release]
               </p>
               <p>
                 พัฒนาโดยเภสัชกรธนัฎชา สองเมือง หัวหน้างานเภสัชกรรมสารสนเทศ และงานเภสัชกรรมการผลิต
