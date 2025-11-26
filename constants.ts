@@ -1,5 +1,4 @@
 
-
 import { Question, Language, Translation } from './types';
 
 const BASE_SCORES = [
@@ -95,6 +94,8 @@ export const TRANSLATIONS: Record<Language, Translation> = {
     title: "Naranjo AI Assessor - Warinchamrab Hospital",
     subtitle: "แบบประเมินอาการไม่พึงประสงค์จากการใช้ยา",
     role: "เครื่องมือสำหรับเภสัชกร",
+    tabTimeline: "ระบบการประเมินแพ้ยา (Timeline)",
+    tabNaranjo: "ประเมิน Naranjo Score",
     // Section 1
     headerPatient: "1 ข้อมูลผู้ป่วย",
     labelName: "ชื่อ-สกุล",
@@ -160,12 +161,27 @@ export const TRANSLATIONS: Record<Language, Translation> = {
     printCardBtn: "พิมพ์บัตรแพ้ยา",
     printReportBtn: "พิมพ์รายงานฉบับเต็ม (A4)",
     assessor: "ผู้ประเมิน",
-    guidelineBtn: "แนวทางปฏิบัติ ADR"
+    guidelineBtn: "แนวทางปฏิบัติ ADR",
+    // Timeline
+    timelineTitle: "Drug Allergy Timeline",
+    addDrugExposure: "บันทึกข้อมูลการได้รับยา (Add Drug Exposure)",
+    labelTimelineReaction: "อาการไม่พึงประสงค์จากยา",
+    addSoapNote: "บันทึกการประเมิน (SOAP Note)",
+    startTime: "วัน-เวลา เริ่มยา (Start Date-Time)",
+    endTime: "วัน-เวลา หยุดยา (End Date-Time)",
+    soapS: "Subjective (อาการที่ผู้ป่วยบอก)",
+    soapO: "Objective (ผลตรวจ/สิ่งที่สังเกตเห็น)",
+    soapA: "Assessment (การประเมิน)",
+    soapP: "Plan (แผนการจัดการ)",
+    addNote: "บันทึก SOAP Note",
+    visualization: "Timeline Visualization"
   },
   en: {
     title: "Naranjo AI Assessor - Warinchamrab Hospital",
     subtitle: "ADR Probability Scale & Assessment",
     role: "Clinical Pharmacist Tool",
+    tabTimeline: "Drug Assessment (Timeline)",
+    tabNaranjo: "Naranjo Score Assessment",
     // Section 1
     headerPatient: "1 Patient Information",
     labelName: "Name-Surname",
@@ -231,12 +247,27 @@ export const TRANSLATIONS: Record<Language, Translation> = {
     printCardBtn: "Print Allergy Card",
     printReportBtn: "Print Full Report (A4)",
     assessor: "Assessor",
-    guidelineBtn: "ADR Guidelines"
+    guidelineBtn: "ADR Guidelines",
+    // Timeline
+    timelineTitle: "Drug Allergy Timeline",
+    addDrugExposure: "Add Drug Exposure",
+    labelTimelineReaction: "Adverse Drug Reaction",
+    addSoapNote: "Add SOAP Note",
+    startTime: "Start Date-Time",
+    endTime: "End Date-Time",
+    soapS: "Subjective",
+    soapO: "Objective",
+    soapA: "Assessment",
+    soapP: "Plan",
+    addNote: "Add SOAP Note",
+    visualization: "Timeline Visualization"
   },
   lo: {
     title: "Naranjo AI Assessor - Warinchamrab Hospital",
     subtitle: "ແບບປະເມີນຜົນຂ້າງຄຽງຈາກການໃຊ້ຢາ",
     role: "ເຄື່ອງມືສຳລັບແພດການຢາ",
+    tabTimeline: "ລະບົບປະເມີນ (Timeline)",
+    tabNaranjo: "ປະເມີນ Naranjo Score",
     // Section 1
     headerPatient: "1 ຂໍ້ມູນຜູ້ປ່ວຍ",
     labelName: "ຊື່-ນາມສະກຸນ",
@@ -302,12 +333,27 @@ export const TRANSLATIONS: Record<Language, Translation> = {
     printCardBtn: "ພິມບັດແພ້ຢາ",
     printReportBtn: "ພິມບົດລາຍງານ (A4)",
     assessor: "ຜູ້ປະເມີນ",
-    guidelineBtn: "ຄູ່ມື ADR"
+    guidelineBtn: "ຄູ່ມື ADR",
+    // Timeline
+    timelineTitle: "Drug Allergy Timeline",
+    addDrugExposure: "Add Drug Exposure",
+    labelTimelineReaction: "Adverse Drug Reaction",
+    addSoapNote: "Add SOAP Note",
+    startTime: "Start Date-Time",
+    endTime: "End Date-Time",
+    soapS: "Subjective",
+    soapO: "Objective",
+    soapA: "Assessment",
+    soapP: "Plan",
+    addNote: "Add SOAP Note",
+    visualization: "Timeline Visualization"
   },
   my: {
     title: "Naranjo AI Assessor - Warinchamrab Hospital",
     subtitle: "ဆေးဝါးဆိုးကျိုးများ ဖြစ်နိုင်ချေ တိုင်းတာခြင်း",
     role: "ဆေးဝါးပညာရှင်များအတွက်",
+    tabTimeline: "Timeline Assessment",
+    tabNaranjo: "Naranjo Score Assessment",
     // Section 1
     headerPatient: "1 လူနာအချက်အလက်",
     labelName: "အမည်",
@@ -373,7 +419,20 @@ export const TRANSLATIONS: Record<Language, Translation> = {
     printCardBtn: "ကတ်ထုတ်ရန်",
     printReportBtn: "အစီရင်ခံစာ ထုတ်ယူမည် (A4)",
     assessor: "စစ်ဆေးသူ",
-    guidelineBtn: "ADR လမ်းညွှန်"
+    guidelineBtn: "ADR လမ်းညွှန်",
+    // Timeline
+    timelineTitle: "Drug Allergy Timeline",
+    addDrugExposure: "Add Drug Exposure",
+    labelTimelineReaction: "Adverse Drug Reaction",
+    addSoapNote: "Add SOAP Note",
+    startTime: "Start Date-Time",
+    endTime: "End Date-Time",
+    soapS: "Subjective",
+    soapO: "Objective",
+    soapA: "Assessment",
+    soapP: "Plan",
+    addNote: "Add SOAP Note",
+    visualization: "Timeline Visualization"
   }
 };
 

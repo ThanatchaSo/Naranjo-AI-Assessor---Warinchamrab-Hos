@@ -1,5 +1,4 @@
 
-
 export enum Interpretation {
   DEFINITE = "Definite",
   PROBABLE = "Probable",
@@ -51,7 +50,7 @@ export interface ReportData {
 export interface AIAnalysisResult {
   analysis: string;
   recommendations: string[];
-  riskFactor: 'Low' | 'Medium' | 'High';
+  riskFactor: 'Low' | 'Medium' | 'High' | 'Unknown';
 }
 
 export type Language = 'th' | 'en' | 'lo' | 'my';
@@ -60,6 +59,9 @@ export interface Translation {
   title: string;
   subtitle: string;
   role: string;
+  // Tabs
+  tabTimeline: string;
+  tabNaranjo: string;
   // Section 1: Patient & Pharmacist
   headerPatient: string;
   labelName: string;
@@ -126,6 +128,19 @@ export interface Translation {
   printReportBtn: string;
   assessor: string;
   guidelineBtn: string;
+  // Timeline
+  timelineTitle: string;
+  addDrugExposure: string;
+  labelTimelineReaction: string;
+  addSoapNote: string;
+  startTime: string;
+  endTime: string;
+  soapS: string;
+  soapO: string;
+  soapA: string;
+  soapP: string;
+  addNote: string;
+  visualization: string;
 }
 
 export interface AIConfig {
@@ -133,4 +148,21 @@ export interface AIConfig {
   apiKey?: string; // For Gemini
   modelName: string; // 'medgemma', 'llama3', or 'gemini-2.5-flash'
   ollamaUrl?: string; // e.g., 'http://localhost:11434'
+}
+
+// Timeline Specific Types
+export interface TimelineDrug {
+  id: string;
+  name: string;
+  startDate: string; // ISO DateTime string
+  endDate: string;   // ISO DateTime string
+}
+
+export interface SoapNote {
+  id: string;
+  timestamp: string; // ISO DateTime string
+  subjective: string;
+  objective: string;
+  assessment: string;
+  plan: string;
 }
